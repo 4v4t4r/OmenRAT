@@ -86,35 +86,6 @@ class OmenAdminClient(threading.Thread):
         else:
             print string
 
-class Gui(Tkinter.Frame):
-    def __init__(self):
-        self.top = Tkinter.Tk()
-        self.top.title("OmenAdmin Client")
-        self.gui_init()
-        Tkinter.Frame.__init__(self)
-
-
-    def gui_init(self):
-        # Console
-        self.console_label = Tkinter.Label(text="OmenConsole")
-        self.console_label.grid(row=0, column=0, sticky="W", padx="2", pady="0")
-
-        self.console_text = Tkinter.Text(bg="black", fg="white")
-        self.console_text.grid(row=1, column=0, padx="5", pady="5")
-
-        self.console_entry_text = Tkinter.Label(text="Input:")
-        self.console_entry_text.grid(row=2, column=0, padx="2", pady="2", sticky="W")
-        self.console_entry = Tkinter.Entry(width=100)
-        self.console_entry.bind("<Return>", self.console_get)
-        self.console_entry.grid(row=2, column=0, padx="5", pady="2", sticky="E")
-
-        # Config the text box, read only.
-        self.console_text.config(state=Tkinter.DISABLED)
-
-    def console_get(self, event):
-        print self.console_entry.get()
-        self.console_entry.delete(0, Tkinter.END)
 
 if __name__ == "__main__":
-    window = Gui()
-    window.mainloop()
+    pass

@@ -5,7 +5,7 @@ import sys
 import threading
 import ConfigParser
 
-from OmenAdminServer import OmenAdminServer
+from OmenControlServer import OmenControlServer
 from EasyEncryption import *
 from EncryptedSockets import *
 from confighelpers import *
@@ -20,6 +20,7 @@ a new kind of remote administration tool
 # constants
 READ_SIZE = 512
 
+
 class OmenServer(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -29,25 +30,23 @@ class OmenServer(threading.Thread):
         self.config_init()
         self.key = hashlib.sha256(self.key).digest()
 
-        # setting up the socket
+        # Socket Setup
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(("", self.port))
         self.sock.listen(5)
-
-        # client handling
+        # Client Setup
         self.descriptors = [self.sock]
         self.clients = {}
-
         self.client_id = 0
 
         print "OmenServer started on port {0}".format(self.port)
-        print "OmenAdminServer starting..."
-        self.admin_server = OmenAdminServer(self.admin_port, self.key,
+        print "OmenControlServer starting..."
+        self.control_server = OmenControlServer(self.admin_port, self.key,
                                             self.admin_key, self, self.admin_max_users)
 
-        self.admin_server.start()
-        print "OmenAdminServer started on port {0}".format(self.admin_port)
+        self.control_server.start()
+        print "OmenControlServer started on port {0}".format(self.admin_port)
 
     def config_init(self):
         self.config = ConfigParser.ConfigParser()
@@ -73,11 +72,10 @@ class OmenServer(threading.Thread):
             # wait for an event on a readable socket descriptor..
             (sread, swrite, sexc) = select.select(self.descriptors, [], [])
 
-            # iterate through tagged read descriptors
             for sock in sread:
 
                 if sock == self.sock:
-                    # if we get a response on the server socket
+                    # The socket is the server socket (us), so we assume its a new connection.
                     self.accept_new_connection()
 
                 else:
@@ -85,7 +83,7 @@ class OmenServer(threading.Thread):
 
                     try:
                         data = receive_decrypt_data(self.key, sock)
-                    except:
+                    except socket.SocketError:
                         sock.close()
                         self.descriptors.remove(sock)
 
@@ -106,7 +104,7 @@ class OmenServer(threading.Thread):
 
         print "Client connected. {0}".format(addr[0])
 
-        send_encrypt_data("*! verify", self.key, newsock)
+        send_encrypt_data("!* verify", self.key, newsock)
         try:
             response = receive_decrypt_data(self.key, newsock)
         except Exception, e:

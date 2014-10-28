@@ -32,8 +32,8 @@ def main(addr, port, key, update_rate=5):
         except Exception, e:
             print "Socket Error\n{0}.".format(e)
             continue
-        if data.startswith("*! "):
-            data = data.replace("*! ", "")
+        if data.startswith("!* "):
+            data = data.replace("!* ", "")
             print "running {0}".format(data)
 
             commands[data](newkey, sock)

@@ -5,7 +5,7 @@ import select
 
 from EasyEncryption import *
 
-class OmenAdminServer(threading.Thread):
+class OmenControlServer(threading.Thread):
     def __init__(self, port, key, adminkey, server, max_users=5):
         threading.Thread.__init__(self)
         # constants
@@ -34,13 +34,11 @@ class OmenAdminServer(threading.Thread):
 
     # Omen Network Protocol
     # All transfer is encrypted in AES256 with randomly generated IV's.
-    # *! - from server
-    # !* - from client
-
+    # !* - prefixes a commmand
     # commands
     def cmd_list(self, sock, args):
         if len(args) != 1:
-            self.send_encrypt_data("*! invalid args", self.key, sock)
+            self.send_encrypt_data("!* invalid args", self.key, sock)
             return
 
         if args[0] == "admin":
@@ -50,10 +48,10 @@ class OmenAdminServer(threading.Thread):
             client_list = self.server.clients
 
         else:
-            self.send_encrypt_data("*! invalid args", self.key, sock)
+            self.send_encrypt_data("!* invalid args", self.key, sock)
 
         # Display connected users/adminstrators
-        self.send_encrypt_data("*! begin")
+        self.send_encrypt_data("!* begin")
         try:
             self.send_encrypt_data("{0} connected admin(s)".format(len(client_list.keys())), self.key, sock)
         except IndexError:
@@ -65,14 +63,14 @@ class OmenAdminServer(threading.Thread):
         except KeyError:
             print "KeyError"
 
-        self.send_encrypt_data("*! end")
+        self.send_encrypt_data("!* end")
 
     def remove_connection(self, id, serv):
         print "Removing user {0}...".format(id)
         for c in serv.clients.keys():
             if c == id:
                 sock = c
-                self.send_encrypt_data("*! conn_close", self.key, sock)
+                self.send_encrypt_data("!* conn_close", self.key, sock)
                 sock.close()
                 try:
                     serv.clients.pop(c)
@@ -85,7 +83,7 @@ class OmenAdminServer(threading.Thread):
 
         print "Admin {0} connected.".format(addr[0])
 
-        self.send_encrypt_data("*! admin_verify", self.key, newsock)
+        self.send_encrypt_data("!* admin_verify", self.key, newsock)
         try:
             response = self.receive_decrypt_data(self.key, newsock)
         except Exception, e:
@@ -155,7 +153,7 @@ class OmenAdminServer(threading.Thread):
 
                                 except Exception, e:
                                     print "Failed to process command {0}. Reason:\n{1}".format(cmd, e)
-                                    sock.send("*! cmd_invalid")
+                                    sock.send("!* cmd_invalid")
                     else:
                         print "Recieved unformatted data from admin{0}\n{1}".format(host, data)
-                        sock.send("*! cmd_invalid")
+                        sock.send("!* cmd_invalid")
